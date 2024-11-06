@@ -1,0 +1,31 @@
+# trading-robot/Dockerfile
+
+# Используем базовый образ с Debian Bookworm
+FROM python:3.12.7-bookworm
+
+# Обновляем pip и устанавливаем Poetry
+RUN python3.12 -m pip install --upgrade pip
+
+
+#RUN curl -sSL https://install.python-poetry.org | python3.12 -
+RUN pip install poetry
+
+# Настраиваем переменную окружения для Poetry
+# ENV PATH="/root/.local/bin:$PATH"
+ENV PATH="$USER/.local/bin:/root/.local/bin:$PATH"
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Копируем файлы проекта
+COPY pyproject.toml poetry.lock /app/
+COPY ./trading_bot /app/trading_bot
+
+# Устанавливаем зависимости через Poetry
+# RUN /root/.local/bin/poetry install --no-root
+# RUN poetry install --no-root
+# RUN ls -la trading-bot
+WORKDIR /app/trading_bot
