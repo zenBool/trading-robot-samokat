@@ -2,6 +2,8 @@
 # Custom ignoring objects
 #
 #
+main_old.py
+
 .idea/
 **/.idea/
 
