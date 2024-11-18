@@ -1,3 +1,5 @@
+import threading
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,7 +10,13 @@ from db.crud.users import get_all_users, get_user_by_id, create_new_user
 router = APIRouter(tags=["Users"])
 
 
-@router.get("", response_model=list[UserResponseSchema])
+@router.get("")
+def home():
+    th = threading.currentThread().name
+    return {"Thread": th}
+
+
+@router.get("/users", response_model=list[UserResponseSchema])
 async def get_users(session: AsyncSession = Depends(db_helper.session)):
     async with session as session1:
         users = await get_all_users(session=session1)

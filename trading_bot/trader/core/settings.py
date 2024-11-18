@@ -1,8 +1,9 @@
 import logging
-
+import os
+from pathlib import Path
 from typing import Optional, Tuple, Type
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from pydantic import PostgresDsn
 
 from pydantic_settings import (
@@ -10,6 +11,11 @@ from pydantic_settings import (
     SettingsConfigDict,
     PydanticBaseSettingsSource,
 )
+
+
+ENV_DIR = Path(__file__).parents[3]
+TEMPLATE_ENV = ENV_DIR / "template.env"
+BASE_ENV = ENV_DIR / ".env"
 
 
 class LogLevel(BaseModel):
@@ -27,26 +33,18 @@ class LogLevel(BaseModel):
         return logging.getLevelName(self.level.upper())
 
 
-class RunConfig(BaseModel):
-    host: str = "localhost"
-    port: int = 8000
+class RabbitMQSettings(BaseModel):
+    host: str = "rabbitmq"
 
 
-class APIPrefix_v1(BaseModel):
-    prefix: str = "/v1"
-    tag: str = "API_v1"
-    users: str = "/users"
+class BinanceKeys(BaseModel):
+    api_key: str = ""
+    api_secret: str = ""
 
 
-class APIPrefix(BaseModel):
-    prefix: str = "/api"
-    tag: str = "API"
-    v1: APIPrefix_v1 = APIPrefix_v1()
-
-
-class DBConfig(BaseModel):
+class DBBinanceConfig(BaseModel):
     url: Optional[PostgresDsn] = (
-        "postgresql+asyncpg://postgres:@192.168.3.50:5432/autotrader"
+        "postgresql+asyncpg://postgres:@192.168.3.50:5432/binance"
     )
 
     echo: bool = False
@@ -68,11 +66,11 @@ class Settings(BaseSettings):
         env_file=("../template.env", "../.env"),
         case_sensitive=False,
         env_nested_delimiter="__",
-        env_prefix="FRONT__",
+        env_prefix="TRADER__",
     )
-    run: RunConfig = RunConfig()
-    api: APIPrefix = APIPrefix()
-    db: DBConfig = DBConfig()
+    db_binance: DBBinanceConfig = DBBinanceConfig()
+    binance: BinanceKeys = BinanceKeys()
+    rabbitmq: RabbitMQSettings = RabbitMQSettings()
     log_level: LogLevel = LogLevel()
 
     @classmethod
@@ -93,4 +91,5 @@ settings = Settings()
 
 
 if __name__ == "__main__":
+    # print(ENV_DIR, Path.is_file(TEMPLATE_ENV))
     pass
