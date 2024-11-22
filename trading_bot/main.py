@@ -6,19 +6,20 @@ from fastapi.responses import ORJSONResponse
 from api import router as api_router
 from core.config import settings
 from db import db_helper
-# from trading.run import broker
+from trading.run import broker
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     # before startup
-    # await broker.start()
+    broker.start()
 
     yield
 
     # on shutdown
     await db_helper.dispose()  # dispose engine
-    # broker.stop()
+    broker.stop()
+    broker.join()
 
 
 app = FastAPI(
