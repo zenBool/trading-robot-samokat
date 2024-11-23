@@ -20,8 +20,10 @@ class Client(Spot):
     ):
         if test_mode:
             kwargs["base_url"] = "https://testnet.binance.vision"
-        else:
+        elif api_key and api_secret:
             kwargs["base_url"] = self._server_choice()
+        else:
+            kwargs["base_url"] = 'https://data-api.binance.vision'
 
         super().__init__(api_key, api_secret, **kwargs)
 
@@ -31,7 +33,7 @@ class Client(Spot):
 
         ! Implement later
         """
-        return "https://api2.binance.com"
+        return "https://api3.binance.com"
 
     def margin_account(self):
         """
