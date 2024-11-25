@@ -1,25 +1,26 @@
 # trader/run.py
 import time
-from threading import Thread, Event
-
+import threading as th
 from common.logger import logger
 
 from trading.core.config import Config
 from trading.core.storage import Storage
 from trading.core.data_controller import DataController
 from trading.core.safe_scheduler import SafeScheduler
+from trading.core.trader import Trader
 from trading.strategies.tripple_screen_strategy import Strategy
 
 
-class Broker(Thread):
+class Broker(th.Thread):
     def __init__(self):
         super().__init__()
         self._logger = logger
         self.config = Config()
         self.storage = Storage()
+        self.trader = Trader(cfg=self.config)
         self.data = DataController(storage=self.storage)
-        self.strategist = Strategy(config=self.config, data_ctrl=self.data)
-        self._stop_event = Event()
+        self.strategist = Strategy(config=self.config, data_ctrl=self.data, trader=self.trader)
+        self._th_stop_event = th.Event()
 
     def run(self):
         self._logger.info("Starting...")
@@ -37,7 +38,10 @@ class Broker(Thread):
     def stop(self):
         self._logger.debug("Stopping all streams...")
         self.strategist.data_ctrl.stop()
-        self._stop_event.set()
+        self._th_stop_event.set()
+
+    def account(self):
+        return self.trader.account(omitZeroBalance=True)
 
 
 broker = Broker()

@@ -36,8 +36,11 @@ class Trader(Client):
 
     def __init__(self, cfg: Any, **kwargs):
         super().__init__(
-            api_key=cfg.BINANCE_API_KEY, api_secret=cfg.BINANCE_API_SECRET, **kwargs
+            api_key=cfg.BINANCE_API_KEY,
+            api_secret=cfg.BINANCE_API_SECRET,
+            **kwargs,
         )
+        self._logger = logger
 
     def buy_limit(self, symbol: str, quantity: float, price: float, **kwargs):
         params = {
@@ -127,10 +130,10 @@ class Trader(Client):
 
         try:
             response = self.new_order(**params)
-            logger.info(response)
+            self._logger.info(response)
             return response
         except ClientError as error:
-            logger.error(
+            self._logger.error(
                 "{} {} error. Status: {}; error code: {}; error message: {}".format(
                     params["side"],
                     params["type"],

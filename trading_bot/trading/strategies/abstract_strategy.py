@@ -13,8 +13,8 @@ from trading.models import Symbol, Timeframe
 class AbstractSpotStrategy(BaseModel, ABC):
     config: Config
     data_ctrl: DataController
-    trader: Trader | None = None
-    basic_asset: str | None = "USDT"
+    trader: Trader
+    basic_asset: str = "USDT"
     symbols_list: List[str] | None = None
     symbols: List[str | Symbol] | None = None
     tfs: List[str | Timeframe] | None = None

@@ -51,7 +51,7 @@ def get_supported_symbols_list(quote: str) -> List[str]:
         ]
 
     # supported_symbols_list = enums.SYMBOLS
-    supported_symbols_list = enums.SYMBOLS_OTHER[25:]
+    # supported_symbols_list = enums.SYMBOLS_OTHER[25:]
 
     return supported_symbols_list
 

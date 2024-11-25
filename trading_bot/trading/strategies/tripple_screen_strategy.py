@@ -1,6 +1,8 @@
 from typing import List
 
 from common.logger import logger
+from trading.core.config import Config
+from trading.core.data_controller import DataController
 from trading.core.trader import Trader
 from trading.enums.enums import (
     AlligatorStatePool,
@@ -15,16 +17,18 @@ from trading.strategies.abstract_strategy import AbstractSpotStrategy
 
 
 class Strategy(AbstractSpotStrategy):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    config: Config
+    data_ctrl: DataController
+    trader: Trader
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)  # config, data_controller, trader, **kwargs
+        self._logger = logger
         self.symbols_list: List[Symbol] = self._init_symbols(self.config.SYMBOLS_LIST)
         self.tfs: AlligatorTfsTuple = self.config.TIMEFRAMES_LIST
-        self.indicators: List[Indicator] = [Alligator]
-
-        self.trader = Trader(cfg=self.config)
-        # account Basic Asset.
         self.basic_asset = self.config.BASE_COIN
+
+        self.indicators: List[Indicator] = [Alligator]
 
         self.symbols: List[Symbol] = []
 
@@ -39,10 +43,10 @@ class Strategy(AbstractSpotStrategy):
             )
             alligator = self.data_ctrl.getIndicator((symbol.lower(), self.tfs.vlong))
             if alligator.direction().value >= 1:
-                logger.info(f"Working pair: ({symbol.name}, {self.tfs.vlong})")
+                self._logger.info(f"Working pair: ({symbol.name}, {self.tfs.vlong})")
                 self.symbols.append(symbol)
             else:
-                logger.info(
+                self._logger.info(
                     f"Detached: ({symbol.name}, {self.tfs.vlong}) -----------------------"
                 )
                 self.data_ctrl.stop((symbol.lower(), self.tfs.vlong))
@@ -50,9 +54,9 @@ class Strategy(AbstractSpotStrategy):
     def init_data_ctrl(self):
         self.symbols_filter()
 
-        logger.warning("List working pairs completed")
-        logger.warning(f"START full work with {len(self.symbols)} pairs")
-        logger.info(self.symbols.__str__())
+        self._logger.info("List working pairs completed")
+        self._logger.info(f"START full work with {len(self.symbols)} pairs")
+        self._logger.info(self.symbols.__str__())
 
         self.data_ctrl.init(self.symbols, self.tfs, self.indicators)
 
@@ -66,29 +70,29 @@ class Strategy(AbstractSpotStrategy):
             # recom = self._recommend(states)
             if long + short == 2:
                 if self._volume(symbol.lower()):
-                    logger.info(
+                    self._logger.info(
                         f"BINGO BUY: {symbol} "
                         f"{self.data_ctrl.get((symbol.lower(), self.tfs.long))[0].last_price}"
                     )
                     recommend_buy.append(symbol)
                 else:
-                    logger.info(f"ALLIGATORS BUY: {symbol} " f"but volumes dont match")
+                    self._logger.info(f"ALLIGATORS BUY: {symbol} " f"but volumes dont match")
             elif long + short == -2:
                 if self._volume(symbol.lower()):
-                    logger.info(
+                    self._logger.info(
                         f"BINGO SELL: {symbol} "
                         f"{self.data_ctrl.get((symbol.lower(), self.tfs.vlong))[0].last_price}"
                     )
                     recommend_sell.append(symbol)
                 else:
-                    logger.info(f"ALLIGATORS SELL: {symbol} " f"but volumes dont match")
+                    self._logger.info(f"ALLIGATORS SELL: {symbol} " f"but volumes dont match")
             else:
                 pass
 
         if recommend_buy:
-            logger.info(f"recommend_buy: {recommend_buy}")
+            self._logger.info(f"recommend_buy: {recommend_buy}")
         if recommend_sell:
-            logger.info(f"recommend_sell: {recommend_sell}")
+            self._logger.info(f"recommend_sell: {recommend_sell}")
 
     def track(self):
         pass
