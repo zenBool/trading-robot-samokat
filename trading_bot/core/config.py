@@ -35,6 +35,7 @@ class RunConfig(BaseModel):
 class APIPrefix_v1(BaseModel):
     prefix: str = "/v1"
     tag: str = "API_v1"
+    account: str = "/account"
     users: str = "/users"
 
 

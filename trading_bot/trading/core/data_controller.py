@@ -1,4 +1,5 @@
 import json
+import threading
 import time
 from datetime import datetime
 from typing import List, Dict, Tuple
@@ -34,6 +35,7 @@ class DataController(BaseModel):
         # оба клиента не нуждаются в Ключах
         self.client = Client()
         self.ws_client = WSStreamClient(message_handler=self._handler)
+        self._logger = logger
 
     def init(self, symbols: List[Symbol], timeframes, indicators):
         self.symbols = symbols
@@ -44,12 +46,12 @@ class DataController(BaseModel):
                 name = (symb.lower(), tf)
 
                 if name in self.storage.list_klines:
-                    logger.info(
+                    self._logger.info(
                         f"----------------------------Stream {name} already in Storage KLINES"
                     )
                     continue
                 if name in self.storage.list_indicators:
-                    logger.info(
+                    self._logger.info(
                         f"--------------Stream {name} already in Storage INDICATORS"
                     )
                     continue
@@ -64,6 +66,8 @@ class DataController(BaseModel):
 
     def stop(self, name: Tuple[str, str] | None = None):
         if not name:
+            self._logger.debug("DataManager: Stop all streams")
+            self._logger.debug(f"{threading.current_thread().getName()}")
             self.ws_client.stop()
         else:
             try:
@@ -71,9 +75,9 @@ class DataController(BaseModel):
                     return
                 self.ws_client.stop(id=self._streams_id.pop(name))
                 self.storage.delete(name)
-                logger.info(f"Stream {name} stopped")
+                self._logger.info(f"Stream {name} stopped")
             except Exception as e:
-                logger.error(f"DataManager: Don't stop stream {name}\n{e}")
+                self._logger.error(f"DataManager: Don't stop stream {name}\n{e}")
 
     # def update(self, name: Tuple[str, str], data: pd.DataFrame):
     #     self.storage.update(name, data)
@@ -148,8 +152,8 @@ class DataController(BaseModel):
         try:
             kline = self.client.klines(symbol.upper(), timeframe, limit=limit)
         except Exception as e:
-            logger.error(f"DataManager: Don't load kline {symbol} {timeframe}")
-            logger.error(e)
+            self._logger.error(f"DataManager: Don't load kline {symbol} {timeframe}")
+            self._logger.error(e)
             exit(1)
         df = pd.DataFrame(kline, columns=enums.COLUMNS.keys()).astype(
             enums.COLUMNS, copy=False
@@ -166,18 +170,18 @@ class DataController(BaseModel):
 
         """
 
-        logger.info(f"Start load {name} {datetime.now()}")
+        self._logger.info(f"Start load {name} {datetime.now()}")
 
         symbolkline: SymbolKline = self._load_kline(*name)
-        logger.info(f"Finish load {name} {datetime.now()}")
+        self._logger.info(f"Finish load {name} {datetime.now()}")
         # while not symbolkline.values.empty:
         #     time.sleep(0.3)
         self.storage.add(name, symbolkline)
-        logger.info(f"Load {symbolkline.name}")
+        self._logger.info(f"Load {symbolkline.name}")
 
         indicator = self.storage.get_indicator(name)
         indicator.calculate(symbolkline.values)
-        logger.info(f"Calculate {self.storage.get_indicator(name).name}")
+        self._logger.info(f"Calculate {self.storage.get_indicator(name).name}")
 
         # start stream for symbol_kline
         if (name[0], "1m") not in self._streams_id:

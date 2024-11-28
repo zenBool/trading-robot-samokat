@@ -106,8 +106,8 @@ class WSStreamClient(SpotWebsocketStreamClient):
         logger.info("opened connection")
 
     @staticmethod
-    def on_close(socketManager):
-        logger.info("Closing connection received")
+    def on_close(*args):
+        logger.info(f"Closing connection received. args: {args}")
 
 
 class WSAPIClient(SpotWebsocketAPIClient):

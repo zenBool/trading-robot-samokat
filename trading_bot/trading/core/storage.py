@@ -19,11 +19,15 @@ class Storage(Singleton, BaseModel):
     _indicators: Dict[Tuple[str, str], Indicator] = {}
     _klines: Dict[Tuple[str, str], SymbolKline] = {}
 
+    def __init__(self):
+        super().__init__()
+        self._logger = logger.getChild("Storage")
+
     def get(self, name: Tuple[str, str]) -> Tuple[SymbolKline, Indicator] | None:
         if name in self.list_klines:
             return self.get_kline(name), self.get_indicator(name)
         else:
-            logger.warning(f"Data {name} not exist in the STORAGE")
+            self._logger.warning(f"Data {name} not exist in the STORAGE")
             # raise
             return None
 
@@ -31,7 +35,7 @@ class Storage(Singleton, BaseModel):
         if name in self._indicators.keys():
             return self._indicators[name]
         else:
-            logger.warning(f"Data {name} not exist in the STORAGE")
+            self._logger.warning(f"Data {name} not exist in the STORAGE")
             # raise
             return None
 
@@ -39,7 +43,7 @@ class Storage(Singleton, BaseModel):
         if name in self._klines.keys():
             return self._klines[name]
         else:
-            logger.warning(f"SymbolKline {name} not exist in the STORAGE")
+            self._logger.warning(f"SymbolKline {name} not exist in the STORAGE")
             # raise
             return None
 
@@ -47,23 +51,23 @@ class Storage(Singleton, BaseModel):
         if isinstance(data, Indicator):
             if name not in self._indicators.keys():
                 self._indicators[name] = data
-                logger.info(f"Indicator {name} added. 'data' is {type(data)}")
+                self._logger.info(f"Indicator {name} added. 'data' is {type(data)}")
             else:
-                logger.warning(f"Indicator {name} is exist in Store")
+                self._logger.warning(f"Indicator {name} is exist in Store")
         elif isinstance(data, SymbolKline):
             if name not in self._klines.keys():
                 self._klines[name] = data
             else:
-                logger.warning(f"Kline {name} is exist in Store")
+                self._logger.warning(f"Kline {name} is exist in Store")
         else:
-            logger.error(f"Storage.add() - error")
+            self._logger.error(f"Storage.add() - error")
 
     def delete(self, name: Tuple[str, str]):
         try:
             _ = self._indicators.pop(name)
             _ = self._klines.pop(name)
         except KeyError as e:
-            logger.warning(f"Can't delete {name}. Don't exist in STORAGE\n{e}")
+            self._logger.warning(f"Can't delete {name}. Don't exist in STORAGE\n{e}")
 
     def update(self, name: Tuple[str, str], data: Dict | pd.DataFrame):
         if name in self.list_klines:
@@ -71,16 +75,16 @@ class Storage(Singleton, BaseModel):
                 try:
                     self._indicators[name].update(data)
                 except Exception as e:
-                    logger.error(f"STORAGE: _indicators Don't update {name}\n{e}")
+                    self._logger.error(f"STORAGE: _indicators Don't update {name}\n{e}")
             elif isinstance(data, dict):
                 try:
                     # logger.info(f"Kline {self._klines[name].name} {type(self._klines[name])}")
                     self._klines[name].update(data)
                     # logger.info(f"Kline {name} have {self._klines[name].values.shape} 'rows, column'")
                 except Exception as e:
-                    logger.error(f"STORAGE: _klines Don't update {name}\n{e}")
+                    self._logger.error(f"STORAGE: _klines Don't update {name}\n{e}")
             else:
-                logger.warning(f"Never may be type: {type(data)}.")
+                self._logger.warning(f"Never may be type: {type(data)}.")
 
     def update_from_1m(self, name: Tuple[str, str], data: Dict):
         pass
@@ -88,7 +92,7 @@ class Storage(Singleton, BaseModel):
     @property
     def list_klines(self) -> tuple[tuple[str, str], ...]:
         items = self._klines.keys()
-        logger.debug("items: %s", items)
+        self._logger.debug("items: %s", items)
         return tuple(items)
 
     @property
@@ -99,3 +103,4 @@ class Storage(Singleton, BaseModel):
 
 if __name__ == "__main__":
     pass
+1
