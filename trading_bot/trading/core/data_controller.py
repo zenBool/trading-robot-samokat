@@ -66,8 +66,8 @@ class DataController(BaseModel):
 
     def stop(self, name: Tuple[str, str] | None = None):
         if not name:
-            self._logger.debug("DataManager: Stop all streams")
-            self._logger.debug(f"{threading.current_thread().getName()}")
+            self._logger.info("DataManager: Stop all streams")
+            self._logger.debug(f"{threading.current_thread().name} stopped")
             self.ws_client.stop()
         else:
             try:

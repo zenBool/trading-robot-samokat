@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from core.dependencies import get_broker
-from trading.run import Broker
+from trading.core.broker import Broker
 
 router = APIRouter(tags=["Account"])
 

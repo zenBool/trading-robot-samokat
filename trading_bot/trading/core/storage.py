@@ -92,7 +92,6 @@ class Storage(Singleton, BaseModel):
     @property
     def list_klines(self) -> tuple[tuple[str, str], ...]:
         items = self._klines.keys()
-        self._logger.debug("items: %s", items)
         return tuple(items)
 
     @property

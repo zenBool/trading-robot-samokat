@@ -88,6 +88,7 @@ class WSStreamClient(SpotWebsocketStreamClient):
             on_pong=WSStreamClient.on_pong,
             on_close=WSStreamClient.on_close,
             is_combined=True,
+            logger=logger,
             **kwargs,
         )
 

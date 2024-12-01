@@ -12,7 +12,7 @@ router = APIRouter(tags=["Users"])
 
 @router.get("")
 def home():
-    th = threading.currentThread().name
+    th = threading.current_thread().getName()
     return {"Thread": th}
 
 
