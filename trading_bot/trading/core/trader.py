@@ -42,81 +42,35 @@ class Trader(Client):
         )
         self._logger = logger
 
-    def buy_limit(self, symbol: str, price: float, quantity: float,  **kwargs):
-        params = {
-            "symbol": symbol,
-            "quantity": quantity,
-            "price": price,
-            "side": "BUY",
-            "type": "LIMIT",
-            "timeInForce": "GTC",
-        }
-        if kwargs:
-            params.update(kwargs)
+    def buy_limit(self, symbol: str, price: float, quantity: float = 0,  quoteOrderQty: float = 0):
+        side = "BUY"
 
-        return self._new_order(**params)
+        return self._new_limit_order(symbol, side, price, quantity, quoteOrderQty)
 
-    def sell_limit(self, symbol: str, quantity: float, price: float, **kwargs):
-        params = {
-            "symbol": symbol,
-            "quantity": quantity,
-            "price": price,
-            "side": "SELL",
-            "type": "LIMIT",
-            "timeInForce": "GTC",
-        }
-        if kwargs:
-            params.update(kwargs)
+    def sell_limit(self, symbol: str, price: float, quantity: float = 0,  quoteOrderQty: float = 0):
+        side = "SELL"
 
-        return self._new_order(**params)
+        return self._new_limit_order(symbol, side, price, quantity, quoteOrderQty)
 
     def buy_market(
         self,
         symbol: str,
         quantity: float = 0,
         quoteOrderQty: float = 0,
-        **kwargs,
     ):
-        params = {
-            "symbol": symbol,
-            "side": "BUY",
-            "type": "MARKET",
-            "timeInForce": "GTC",
-        }
-        if not quantity:
-            if quoteOrderQty:
-                params.update({"quoteOrderQty": quoteOrderQty})
-        else:
-            params.update({"quantity": quantity})
+        side = "BUY"
 
-        if kwargs:
-            params.update(kwargs)
-
-        return self._new_order(**params)
+        return self._new_market_order(symbol, side, quantity, quoteOrderQty)
 
     def sell_market(
         self,
         symbol: str,
         quantity: float = 0,
         quoteOrderQty: float = 0,
-        **kwargs,
     ):
-        params = {
-            "symbol": symbol,
-            "side": "SELL",
-            "type": "MARKET",
-            "timeInForce": "GTC",
-        }
-        if not quantity:
-            if quoteOrderQty:
-                params.update({"quoteOrderQty": quoteOrderQty})
-        else:
-            params.update({"quantity": quantity})
+        side = "SELL"
 
-        if kwargs:
-            params.update(kwargs)
-
-        return self._new_order(**params)
+        return self._new_market_order(symbol, side, quantity, quoteOrderQty)
 
     def cancel_orders_by_symbol(self, symbol: str):
         try:
@@ -141,6 +95,38 @@ class Trader(Client):
             )
 
         return []
+
+    def _new_limit_order(self, symbol: str, side: str, price: float, quantity: float = 0, quoteOrderQty: float = 0):
+        if quantity == quoteOrderQty == 0:
+            return -1
+
+        if quantity == 0:
+            quantity = quoteOrderQty / price
+
+        params = {
+            "symbol": symbol,
+            "quantity": quantity,
+            "price": price,
+            "side": side,
+            "type": "LIMIT",
+            "timeInForce": "GTC",
+        }
+
+        return self._new_order(**params)
+
+    def _new_market_order(self, symbol: str, side: str, quantity: float = 0, quoteOrderQty: float = 0):
+        params = {
+            "symbol": symbol,
+            "side": side,
+            "type": "MARKET",
+        }
+        if not quantity:
+            if quoteOrderQty:
+                params.update({"quoteOrderQty": quoteOrderQty})
+        else:
+            params.update({"quantity": quantity})
+
+        return self._new_order(params)
 
     def _new_order(self, params):
         # params = {
