@@ -42,7 +42,7 @@ class Trader(Client):
         )
         self._logger = logger
 
-    def buy_limit(self, symbol: str, quantity: float, price: float, **kwargs):
+    def buy_limit(self, symbol: str, price: float, quantity: float,  **kwargs):
         params = {
             "symbol": symbol,
             "quantity": quantity,
@@ -118,6 +118,30 @@ class Trader(Client):
 
         return self._new_order(**params)
 
+    def cancel_orders_by_symbol(self, symbol: str):
+        try:
+            self.cancel_open_orders(symbol)
+        except Exception:
+            self._logger.error("===Failed to cancel orders.===")
+
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
+    def _get_all_open_orders(self):
+        try:
+            return self.get_open_orders()
+        except ClientError as error:
+            self._logger.error(
+                "My Block ERROR. status: {}; error code: {}; error message: {}".format(
+                    error.status_code, error.error_code, error.error_message
+                )
+            )
+
+        return []
+
     def _new_order(self, params):
         # params = {
         #     "symbol": symbol,
@@ -144,9 +168,3 @@ class Trader(Client):
             )
 
         return -1
-
-    def open(self):
-        pass
-
-    def close(self):
-        pass
