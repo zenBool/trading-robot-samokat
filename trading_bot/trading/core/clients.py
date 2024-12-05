@@ -69,6 +69,23 @@ class Client(Spot):
         return [symbol for symbol in usdt if symbol.endswith("USDT")]
 
 
+def on_ping(socketManager):
+    logger.info("received ping from server")
+
+
+def on_pong(socketManager):
+    logger.info("received pong from server")
+    # logger.info(kwargs.__repr__())
+
+
+def on_open(socketManager):
+    logger.info("opened connection")
+
+
+def on_close(*args):
+    logger.info(f"Closing connection received. args: {args}")
+
+
 class WSStreamClient(SpotWebsocketStreamClient):
     """
     Customising Stream client
@@ -79,36 +96,23 @@ class WSStreamClient(SpotWebsocketStreamClient):
             stream_url = "wss://testnet.binance.vision"
         else:
             stream_url = "wss://stream.binance.com:9443"
+        self._logger = logger
 
         super().__init__(
             stream_url,
-            on_open=WSStreamClient.on_open,
+            on_open=on_open,
             on_message=message_handler,
-            on_ping=WSStreamClient.on_ping,
-            on_pong=WSStreamClient.on_pong,
-            on_close=WSStreamClient.on_close,
+            on_ping=on_ping,
+            on_pong=on_pong,
+            on_close=on_close,
             is_combined=True,
-            logger=logger,
+            logger=self._logger,
             **kwargs,
         )
 
-    @staticmethod
-    def on_ping(*args):
-        logger.info(f"args on_ping: {args}")
-        logger.info("received ping from server")
 
-    @staticmethod
-    def on_pong(socketManager):
-        logger.info("received pong from server")
-        # logger.info(kwargs.__repr__())
-
-    @staticmethod
-    def on_open(socketManager):
-        logger.info("opened connection")
-
-    @staticmethod
-    def on_close(*args):
-        logger.info(f"Closing connection received. args: {args}")
+def message_handler(self, _, message):
+    logger.info(message)
 
 
 class WSAPIClient(SpotWebsocketAPIClient):
@@ -120,28 +124,21 @@ class WSAPIClient(SpotWebsocketAPIClient):
         else:
             streamUrl = "wss://ws-api.binance.com:443/ws-api/v3"
 
+        self._logger = logger
+
         super().__init__(
             stream_url=streamUrl,
             api_key=key,
             api_secret=secret,
-            on_message=self.message_handler,
-            on_open=self.on_open,
-            on_close=self.on_close,
+            on_message=message_handler,
+            on_open=on_open,
+            on_close=on_close,
             on_error=None,
             on_ping=None,
             on_pong=None,
             timeout=None,
-            logger=logger,
+            logger=self._logger,
         )
-
-    def on_close(self, _):
-        logger.info("Do custom stuff when connection is closed")
-
-    def on_open(self, _):
-        logger.info("Opened connection")
-
-    def message_handler(self, _, message):
-        logger.info(message)
 
 
 if __name__ == "__main__":
