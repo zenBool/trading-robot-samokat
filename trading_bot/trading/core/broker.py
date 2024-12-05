@@ -36,8 +36,6 @@ class Broker(th.Thread):
 
     def run(self):
         self._logger.info("Starting...")
-        self._logger.debug(f"RUN Broker... {th.current_thread().getName()}")
-        self._logger.debug(f"Active threads at start Broker.run() : {th.active_count()}")
         self.strategist.init_data_ctrl()
 
         schedule = SafeScheduler(logger)
@@ -47,15 +45,13 @@ class Broker(th.Thread):
 
         while self._is_running:
             schedule.run_pending()
-            self._logger.debug(f"{th.active_count()} active threads")
-            self._logger.debug(f"{th.current_thread().getName()}")
             time.sleep(2)
 
     def stop(self):
-        self._logger.debug("Stopping all streams...")
         self._is_running = False
         self.strategist.data_ctrl.stop()
         self._th_stop_event.set()
+        self._logger.info("Stop all streams...")
 
     def account(self):
-        return self.trader.account()  # omitZeroBalance=True
+        return self.trader.account(recvWindow=5000, omitZeroBalances='true')  # omitZeroBalance=True
