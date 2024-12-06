@@ -78,8 +78,8 @@ class Trader(Client):
         except Exception:
             self._logger.error("===Failed to cancel orders.===")
 
-    def open(self):
-        pass
+    def get_all_open_orders(self):
+        return self._get_all_open_orders()
 
     def close(self):
         pass
@@ -128,16 +128,7 @@ class Trader(Client):
 
         return self._new_order(params)
 
-    def _new_order(self, params):
-        # params = {
-        #     "symbol": symbol,
-        #     "side": "BUY",
-        #     "type": order_type,
-        #     "timeInForce": "GTC",
-        #     "quantity": quantity,
-        #     "price": price,
-        # }
-
+    def _new_order(self, params: dict) -> Any:
         try:
             response = self.new_order(**params)
             self._logger.info(response)

@@ -10,3 +10,9 @@ router = APIRouter(tags=["Account"])
 def account_overview(broker: Broker = Depends(get_broker)):
     account = broker.account()
     return account
+
+
+@router.get("/open_orders")
+def all_open_orders(broker: Broker = Depends(get_broker)):
+    orders = broker.trader.get_all_open_orders()
+    return orders
