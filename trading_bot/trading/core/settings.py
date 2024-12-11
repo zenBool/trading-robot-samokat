@@ -42,6 +42,8 @@ class RabbitMQSettings(BaseModel):
 class BinanceKeys(BaseModel):
     api_key: str = ""
     api_secret: str = ""
+    testnet_api_key: str = ""
+    testnet_api_secret: str = ""
     tld: str = "com"
 
 

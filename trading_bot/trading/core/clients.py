@@ -69,8 +69,8 @@ class Client(Spot):
         return [symbol for symbol in usdt if symbol.endswith("USDT")]
 
 
-def on_ping(socketManager):
-    logger.info("received ping from server")
+def on_ping(*args):
+    logger.info(f"received ping from server. args: {args}")
 
 
 def on_pong(socketManager):

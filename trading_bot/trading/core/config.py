@@ -1,7 +1,7 @@
 import calendar
 import configparser
 from pathlib import Path
-from typing import List, Annotated, Any
+from typing import List, Annotated, Any, AnyStr
 
 from pydantic import BaseModel, AfterValidator
 
@@ -66,6 +66,14 @@ def check_timeframe(v: str) -> str:
     return v
 
 
+key_file = Path(BASE_DIR, "ssl/test-prv-key.pem")
+if Path.is_file(key_file):
+    with open(key_file, "r") as f:
+        private_key = f.read()
+else:
+    raise FileNotFoundError("No private key file %r found!" % key_file.name)
+
+
 class Config(BaseModel):
     # Get config for binance
     TEST_MODE: bool = cfg.get(USER_CFG_SECTION, "test_mode").lower() == "true"
@@ -74,6 +82,8 @@ class Config(BaseModel):
 
     BINANCE_API_KEY: str = settings.binance.api_key
     BINANCE_API_SECRET: str = settings.binance.api_secret
+    BINANCE_TESTNET_API_KEY: str = settings.binance.testnet_api_key
+    BINANCE_TESTNET_API_SECRET: str = settings.binance.testnet_api_secret
     BINANCE_TLD: str = settings.binance.tld or "com"
 
     #############

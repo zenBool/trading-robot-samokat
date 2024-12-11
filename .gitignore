@@ -7,6 +7,10 @@ main_old.py
 .idea/
 **/.idea/
 
+# Keys
+*.pem
+
+
 # Environments
 .env
 .env.*

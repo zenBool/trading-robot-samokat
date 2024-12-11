@@ -35,9 +35,17 @@ class Trader(Client):
     """
 
     def __init__(self, cfg: Any, **kwargs):
+        if not cfg.TEST_MODE:
+            key = cfg.BINANCE_API_KEY
+            secret = cfg.BINANCE_API_SECRET
+        else:
+            key = cfg.BINANCE_TESTNET_API_KEY
+            secret = cfg.BINANCE_TESTNET_API_SECRET
+
         super().__init__(
-            api_key=cfg.BINANCE_API_KEY,
-            api_secret=cfg.BINANCE_API_SECRET,
+            api_key=key,
+            api_secret=secret,
+            test_mode=cfg.TEST_MODE,
             **kwargs,
         )
         self._logger = logger
@@ -104,7 +112,7 @@ class Trader(Client):
             quantity = quoteOrderQty / price
 
         params = {
-            "symbol": symbol,
+            "symbol": symbol.upper(),
             "quantity": quantity,
             "price": price,
             "side": side,
@@ -116,7 +124,7 @@ class Trader(Client):
 
     def _new_market_order(self, symbol: str, side: str, quantity: float = 0, quoteOrderQty: float = 0):
         params = {
-            "symbol": symbol,
+            "symbol": symbol.upper(),
             "side": side,
             "type": "MARKET",
         }
@@ -126,9 +134,9 @@ class Trader(Client):
         else:
             params.update({"quantity": quantity})
 
-        return self._new_order(params)
+        return self._new_order(**params)
 
-    def _new_order(self, params: dict) -> Any:
+    def _new_order(self, **params: dict) -> Any:
         try:
             response = self.new_order(**params)
             self._logger.info(response)

@@ -36,6 +36,7 @@ class APIPrefix_v1(BaseModel):
     prefix: str = "/v1"
     tag: str = "API_v1"
     account: str = "/account"
+    trade: str = "/trade"
     users: str = "/users"
 
 
