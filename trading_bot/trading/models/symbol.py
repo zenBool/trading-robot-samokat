@@ -8,7 +8,7 @@ class Symbol(BaseModel):
         return self.name.lower()
 
     def __str__(self):
-        return f'{self.name}'
+        return self.name
 
 
 if __name__ == '__main__':

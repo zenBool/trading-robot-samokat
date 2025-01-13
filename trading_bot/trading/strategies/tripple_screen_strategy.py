@@ -1,4 +1,7 @@
-from typing import List
+from typing import List, Dict
+
+from binance.lib.utils import get_timestamp
+from pydantic import Field, BaseModel
 
 from common.logger import logger
 from trading.core.config import Config
@@ -11,32 +14,34 @@ from trading.enums.enums import (
     AlligatorValuesPool,
 )
 from trading.indicators.alligator import Alligator
-from trading.indicators.indicator import Indicator
 from trading.models import Symbol, Timeframe
 from trading.strategies.abstract_strategy import AbstractSpotStrategy
 
 
-class Strategy(AbstractSpotStrategy):
+class Strategy(AbstractSpotStrategy, BaseModel):
     config: Config
     data_ctrl: DataController
     trader: Trader
+    symbols_list: List[Symbol] = Field(default_factory=list)
+    tfs: AlligatorTfsTuple | None = None
+    basic_asset: str = "USDT"
+    symbols_scout: List[Symbol] = Field(default_factory=list)
+    symbols_track: List[Symbol] = Field(default_factory=list)
+    symbols_ban: Dict[Symbol, int] = Field(default_factory=dict)
+    name: str = "TrippleScreen"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)  # config, data_controller, trader, **kwargs
         self._logger = logger
-        self.symbols_list: List[Symbol] = self._init_symbols(self.config.SYMBOLS_LIST)
-        self.tfs: AlligatorTfsTuple = self.config.TIMEFRAMES_LIST
+        self.symbols_list = self._init_symbols(self.config.SYMBOLS_LIST)
+        self.tfs = self.config.TIMEFRAMES_LIST
         self.basic_asset = self.config.BASE_COIN
-
-        self.indicators: List[Indicator] = [Alligator]
-
-        self.symbols: List[Symbol] = []
 
     def symbols_filter(self):
         for symbol in self.symbols_list:
             self.data_ctrl.start(
                 (symbol.lower(), self.tfs.vlong),
-                self.indicators[0](
+                Alligator(
                     symbol=symbol,
                     timeframe=Timeframe(name=self.tfs.vlong),
                 ),
@@ -44,26 +49,27 @@ class Strategy(AbstractSpotStrategy):
             alligator = self.data_ctrl.getIndicator((symbol.lower(), self.tfs.vlong))
             if alligator.direction().value >= 1:
                 self._logger.info(f"Working pair: ({symbol.name}, {self.tfs.vlong})")
-                self.symbols.append(symbol)
+                self.symbols_scout.append(symbol)
             else:
                 self._logger.info(
                     f"Detached: ({symbol.name}, {self.tfs.vlong}) -----------------------"
                 )
                 self.data_ctrl.stop((symbol.lower(), self.tfs.vlong))
+                self.symbols_ban[symbol.lower()] = get_timestamp()
 
     def init_data_ctrl(self):
         self.symbols_filter()
 
         self._logger.info("List working pairs completed")
-        self._logger.info(f"START full work with {len(self.symbols)} pairs")
-        self._logger.info(self.symbols.__str__())
+        self._logger.info(f"START full work with {len(self.symbols_scout)} pairs")
+        self._logger.info(self.symbols_scout.__str__())
 
-        self.data_ctrl.init(self.symbols, self.tfs, self.indicators)
+        self.data_ctrl.init(self.symbols_scout, self.tfs, [Alligator])
 
     def scout(self):
         recommend_buy = []
         recommend_sell = []
-        for symbol in self.symbols:
+        for symbol in self.symbols_scout:
             long = self._long_direction(symbol.lower())
             short = self._short_direction(symbol.lower())
             # states = self._get_states(symbol.lower())
@@ -95,6 +101,9 @@ class Strategy(AbstractSpotStrategy):
             self._logger.info(f"recommend_sell: {recommend_sell}")
 
     def track(self):
+        pass
+
+    def _calculate_new_order_parameters(self):
         pass
 
     def _init_symbols(self, symbols: List[str]) -> List[Symbol]:

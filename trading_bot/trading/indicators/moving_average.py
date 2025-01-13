@@ -29,6 +29,7 @@ class MovingAverage(Indicator):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self._logger = logger.getChild(f'MovingAverage_{self.name}')
         self._set_slope()
 
     @computed_field
@@ -44,7 +45,7 @@ class MovingAverage(Indicator):
         :return: namedtuple('ValuesMA', ['time', 'value', 'delta', 'state'])
         """
         if idx < 0:
-            logger.error(f'Index {idx} is less than 0')
+            self._logger.error(f'Index {idx} is less than 0')
             raise IndexError
 
         row = self.values.iloc[-idx - 1]
@@ -114,8 +115,8 @@ class MovingAverage(Indicator):
         if t not in self.values.index:
             if t != (self.values.index.max() + self.timeframe.ms):
                 # исключение заменить загрузкой пропущенных баров
-                logger.error(f"Destroyed data continuity before: {pd.to_datetime(t, unit='ms')} == {t}")
-                logger.error(f'Last row in kline: {self.values.index.max()}\nnew data: {t}')
+                self._logger.error(f"Destroyed data continuity before: {pd.to_datetime(t, unit='ms')} == {t}")
+                self._logger.error(f'Last row in kline: {self.values.index.max()}\nnew data: {t}')
                 raise
             else:
                 previous_ma = self.values.iloc[-1][col]
@@ -139,7 +140,7 @@ class MovingAverage(Indicator):
                 self.values.at[idx, delta] = delta_ma
                 self.values.at[idx, state] = state_ma
             except Exception as e:
-                logger.error(f"values.iloc bad index in {self.name} {e}")
+                self._logger.error(f"values.iloc bad index in {self.name} {e}")
             _ = self.last_update
 
     def _update_from_dict(self, data: Dict):

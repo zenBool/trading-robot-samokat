@@ -7,9 +7,10 @@ router = APIRouter(tags=["Account"])
 
 
 @router.get("/acc")
-def account_overview(broker: Broker = Depends(get_broker)):
-    account = broker.account()
-    test_mode = broker.config.TEST_MODE
+def account_overview(
+        asset: str = "USDT",
+        broker: Broker = Depends(get_broker)):
+    account = broker.account(asset)
     return account
 
 

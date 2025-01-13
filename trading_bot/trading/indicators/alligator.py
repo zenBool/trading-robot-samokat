@@ -82,7 +82,10 @@ class Alligator(Indicator):
                               )
 
     def direction(self, idx: int = 0) -> EnumAlligatorDirection:
+        #
         # lips, teeth, jaw  is namedtuple['time', 'value', 'delta', 'state']
+        #
+        #
         _, lips, teeth, jaw = self.val(idx)
         # _, lips_prev, teeth_prev, jaw_prev = self.val(idx + 1)
         if all((

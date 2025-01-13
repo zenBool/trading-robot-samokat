@@ -3,11 +3,13 @@ from typing import Any
 from binance.error import ClientError
 
 from common.logger import logger
+from core.schemas.account import AccountSchema
+from trading.core.account import Account
 
-from trading.core.clients import Client
+from trading.core.clients import Client, WSAPIClient, WSStreamClient
 
 
-class Trader(Client):
+class Trader:
     """Parameters for order
     Args:
         symbol (str)
@@ -35,6 +37,10 @@ class Trader(Client):
     """
 
     def __init__(self, cfg: Any, **kwargs):
+        self._logger = logger
+        self.listenKey: str | None = None
+        self.account: AccountSchema | None = None
+
         if not cfg.TEST_MODE:
             key = cfg.BINANCE_API_KEY
             secret = cfg.BINANCE_API_SECRET
@@ -42,13 +48,22 @@ class Trader(Client):
             key = cfg.BINANCE_TESTNET_API_KEY
             secret = cfg.BINANCE_TESTNET_API_SECRET
 
-        super().__init__(
+        self.client = Client(
             api_key=key,
             api_secret=secret,
             test_mode=cfg.TEST_MODE,
             **kwargs,
         )
-        self._logger = logger
+        response = self.client.new_listen_key()
+        self.listenKey = response["listenKey"]
+
+        self.ws_client = WSStreamClient(
+            message_handler=self._ws_stream_message_handler,
+            test_mode=cfg.TEST_MODE,
+            **kwargs,
+        )
+
+        self._get_account()
 
     def buy_limit(self, symbol: str, price: float, quantity: float = 0,  quoteOrderQty: float = 0):
         side = "BUY"
@@ -80,9 +95,12 @@ class Trader(Client):
 
         return self._new_market_order(symbol, side, quantity, quoteOrderQty)
 
+    def cancel_all_orders(self):
+        pass
+
     def cancel_orders_by_symbol(self, symbol: str):
         try:
-            self.cancel_open_orders(symbol)
+            self.client.cancel_open_orders(symbol)
         except Exception:
             self._logger.error("===Failed to cancel orders.===")
 
@@ -92,9 +110,13 @@ class Trader(Client):
     def close(self):
         pass
 
+    def _get_account(self):
+        account_data = self.client.account(recvWindow=5000, omitZeroBalances='true')
+        self.account = Account(**account_data)
+
     def _get_all_open_orders(self):
         try:
-            return self.get_open_orders()
+            return self.client.get_open_orders()
         except ClientError as error:
             self._logger.error(
                 "My Block ERROR. status: {}; error code: {}; error message: {}".format(
@@ -138,7 +160,7 @@ class Trader(Client):
 
     def _new_order(self, **params: dict) -> Any:
         try:
-            response = self.new_order(**params)
+            response = self.client.new_order(**params)
             self._logger.info(response)
             return response
         except ClientError as error:
@@ -153,3 +175,7 @@ class Trader(Client):
             )
 
         return -1
+
+    def _ws_stream_message_handler(self, message):
+        # Implement the message handling logic here
+        pass

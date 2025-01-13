@@ -53,5 +53,5 @@ class Broker(th.Thread):
         self._th_stop_event.set()
         self._logger.info("Stop all streams...")
 
-    def account(self):
-        return self.trader.account(recvWindow=5000, omitZeroBalances='true')  # omitZeroBalance=True
+    def account(self, asset):
+        return self.trader.account.asset(asset="USDT")

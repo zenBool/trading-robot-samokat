@@ -16,10 +16,11 @@ class AbstractSpotStrategy(BaseModel, ABC):
     trader: Trader
     basic_asset: str = "USDT"
     symbols_list: List[str] | None = None
-    symbols: List[str | Symbol] | None = None
+    symbols_scout: List[str | Symbol] | None = None
     tfs: List[str | Timeframe] | None = None
     indicators: List[Indicator] | None = None
     assets: List[Any] | None = None
+    name: str = "AbstractSpotStrategy"
 
     class Config:
         arbitrary_types_allowed = True

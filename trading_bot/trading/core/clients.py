@@ -111,16 +111,26 @@ class WSStreamClient(SpotWebsocketStreamClient):
         )
 
 
-def message_handler(self, _, message):
+def ws_message_handler(_, message):
     logger.info(message)
+
+
+def ws_on_error(_, messsage):
+    logger.info(f"WebSocket error: {messsage}")
 
 
 class WSAPIClient(SpotWebsocketAPIClient):
     def __init__(
-        self, key: str = "", secret: str = "", test_mode: bool = False, **kwargs,
+        self, api_key: str = "", api_secret: str = "", test_mode: bool = False, **kwargs,
     ):
         if test_mode:
-            streamUrl = "wss://testnet.binance.vision/ws-api/v3"
+            # The base endpoint for testnet Web Socket API
+            # https://developers.binance.com/docs/binance-spot-api-docs/web-socket-api/public-websocket-api-for-binance
+            # streamUrl = "wss://testnet.binance.vision/ws-api/v3"
+
+            # This base endpoint for testnet set in examples from binance_connector:
+            # BinanceAutotrader/examples/websocket/spot/websocket_api/app_demo.py
+            streamUrl = "wss://ws-api.testnet.binance.vision/ws-api/v3"
         else:
             streamUrl = "wss://ws-api.binance.com:443/ws-api/v3"
 
@@ -128,16 +138,17 @@ class WSAPIClient(SpotWebsocketAPIClient):
 
         super().__init__(
             stream_url=streamUrl,
-            api_key=key,
-            api_secret=secret,
-            on_message=message_handler,
+            api_key=api_key,
+            api_secret=api_secret,
+            on_message=ws_message_handler,
             on_open=on_open,
             on_close=on_close,
-            on_error=None,
+            on_error=ws_on_error,
             on_ping=None,
             on_pong=None,
             timeout=None,
             logger=self._logger,
+            **kwargs,
         )
 
 
