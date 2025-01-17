@@ -11,6 +11,10 @@ from trading.models import Symbol, Timeframe
 
 
 class AbstractSpotStrategy(BaseModel, ABC):
+    """
+    @config: Config for the strategy
+    @data_ctrl: DataController for getting data
+    """
     config: Config
     data_ctrl: DataController
     trader: Trader
@@ -27,8 +31,10 @@ class AbstractSpotStrategy(BaseModel, ABC):
 
     @abstractmethod
     def scout(self):
+        # Find working pairs
         pass
 
     @abstractmethod
     def track(self):
+        # Track trading pairs
         pass

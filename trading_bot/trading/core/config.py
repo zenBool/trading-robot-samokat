@@ -75,6 +75,11 @@ else:
 
 
 class Config(BaseModel):
+    """Config for trading bot.
+
+    Класс получает из секретов, вычисляет при необходимости и хранит все настройки бота.
+    """
+
     # Get config for binance
     TEST_MODE: bool = cfg.get(USER_CFG_SECTION, "test_mode").lower() == "true"
     # Самая ранняя дата с которой работает приложение в мс

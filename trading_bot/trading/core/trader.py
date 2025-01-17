@@ -1,6 +1,6 @@
 from typing import Any
 
-from binance.error import ClientError
+from binance.error import ClientError, ServerError
 
 from common.logger import logger
 from core.schemas.account import AccountSchema
@@ -40,6 +40,7 @@ class Trader:
         self._logger = logger
         self.listenKey: str | None = None
         self.account: AccountSchema | None = None
+        self.strategyType: int | None = None
 
         if not cfg.TEST_MODE:
             key = cfg.BINANCE_API_KEY
@@ -82,8 +83,14 @@ class Trader:
         quoteOrderQty: float = 0,
     ):
         side = "BUY"
+        try:
+            response = self._new_market_order(symbol, side, quantity, quoteOrderQty)
+        except ClientError as error:
+            logger.error(error)
+        except ServerError as error:
+            logger.error(error)
 
-        return self._new_market_order(symbol, side, quantity, quoteOrderQty)
+        return
 
     def sell_market(
         self,
@@ -109,6 +116,11 @@ class Trader:
 
     def close(self):
         pass
+
+    def set_strategyType(self, strategyId: int):
+        if strategyId < 1000000:
+            raise ValueError("strategyId must be greater than to 1000000.")
+        self.strategyType = 1000000
 
     def _get_account(self):
         account_data = self.client.account(recvWindow=5000, omitZeroBalances='true')
@@ -140,6 +152,7 @@ class Trader:
             "side": side,
             "type": "LIMIT",
             "timeInForce": "GTC",
+            "strategyType": self.strategyType,
         }
 
         return self._new_order(**params)
@@ -149,6 +162,7 @@ class Trader:
             "symbol": symbol.upper(),
             "side": side,
             "type": "MARKET",
+            "strategyType": self.strategyType,
         }
         if not quantity:
             if quoteOrderQty:
@@ -161,8 +175,6 @@ class Trader:
     def _new_order(self, **params: dict) -> Any:
         try:
             response = self.client.new_order(**params)
-            self._logger.info(response)
-            return response
         except ClientError as error:
             self._logger.error(
                 "{} {} error. Status: {}; error code: {}; error message: {}".format(
@@ -173,8 +185,13 @@ class Trader:
                     error.error_message,
                 )
             )
+            return -1, error.error_code, error.error_message
+        except ServerError as error:
+            self._logger.error("Server error: " + error.status_code + error.message)
+            return -1, error.status_code,  error.message
 
-        return -1
+        self._logger.debug("raw response:" + response)
+        return response
 
     def _ws_stream_message_handler(self, message):
         # Implement the message handling logic here
