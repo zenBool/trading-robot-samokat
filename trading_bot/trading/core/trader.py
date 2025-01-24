@@ -58,8 +58,9 @@ class Trader:
         response = self.client.new_listen_key()
         self.listenKey = response["listenKey"]
 
-        self.ws_client = WSStreamClient(
-            message_handler=self._ws_stream_message_handler,
+        self.ws_client = WSAPIClient(
+            api_key=key,
+            api_secret=secret,
             test_mode=cfg.TEST_MODE,
             **kwargs,
         )

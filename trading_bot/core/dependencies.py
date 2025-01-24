@@ -1,4 +1,4 @@
-from trading.core.broker import Broker
+from trading_bot.trading.core.broker import Broker
 
 _broker_instance = None
 

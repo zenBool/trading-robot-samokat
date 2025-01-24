@@ -5,11 +5,11 @@ from typing import List, Annotated, Any, AnyStr
 
 from pydantic import BaseModel, AfterValidator
 
-from common.logger import logger
-from trading.enums import enums
+from trading_bot.common.logger import logger
+from trading_bot.trading.enums import enums
 
-from trading.core.clients import Client
-from trading.core.settings import BASE_DIR, settings
+from trading_bot.trading.core.clients import Client
+from trading_bot.trading.core.settings import BASE_DIR, settings
 
 CFG_FL_NAME = "trader.cfg"
 LOGGING_SECTION = "Logging"
