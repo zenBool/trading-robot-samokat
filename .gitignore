@@ -4,6 +4,7 @@
 #
 main_old.py
 config.ini
+examples/
 
 .idea/
 **/.idea/
