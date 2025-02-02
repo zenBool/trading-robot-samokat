@@ -1,4 +1,7 @@
 import inspect
+import sys
+import time
+from pathlib import Path
 
 from loguru import logger as log
 import logging
@@ -14,7 +17,7 @@ from core.config import settings
 # INFO = 20
 # DEBUG = 10
 # NOTSET = 0
-log_level = settings.log_level.get_level()
+log_level = settings.log_level
 
 
 class InterceptHandler(logging.Handler):
@@ -35,16 +38,26 @@ class InterceptHandler(logging.Handler):
         log.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
-def configure_logging(level: int = log_level):
+def configure_logging(logging, level: int = log_level, log_file: str | Path = None):
+    # Удаляем существующие обработчики, чтобы избежать дублирования
+    logging.getLogger().handlers = []
+
+    if log_file is not None:
+        if isinstance(log_file, str):
+            log_file = settings.log_dir / log_file
+        log.add(log_file)  # , level=level, format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {name}:{line} - {message}"
+
+    logging.Formatter.converter = time.gmtime  # date time in GMT/UTC
     logging.basicConfig(
         handlers=[InterceptHandler()],
         level=level,
-        force=True,
+        # force=True,
         format="[%(asctime)s.%(msecs)03d] %(funcName)20s %(module)s:%(lineno)d %(levelname)-8s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+
     return logging.getLogger(__name__)
 
 
 # Конфигурируем логирование при импорте модуля
-logger = configure_logging()
+logger = configure_logging(logging, log_file='default.log')
