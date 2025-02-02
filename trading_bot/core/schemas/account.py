@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import List
 from datetime import datetime
 
@@ -12,11 +12,17 @@ class CommissionRates(BaseModel):
 
 class Balance(BaseModel):
     asset: str
-    free: str
-    locked: str
+    free: float
+    locked: float
+
+    @validator('free', 'locked', pre=True)
+    def convert_str_to_float(cls, value):
+        if isinstance(value, str):
+            return float(value)
+        return value
 
 
-class AccountSchema(BaseModel):
+class Account(BaseModel):
     maker_commission: int = Field(..., alias="makerCommission")
     taker_commission: int = Field(..., alias="takerCommission")
     buyer_commission: int = Field(..., alias="buyerCommission")
