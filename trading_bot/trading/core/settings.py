@@ -19,20 +19,15 @@ ENV_DIR = Path(__file__).parents[3]
 TEMPLATE_ENV = ENV_DIR / "template.env"
 BASE_ENV = ENV_DIR / ".env"
 
-
-class LogLevel(BaseModel):
-    # CRITICAL = 50
-    # FATAL = CRITICAL
-    # ERROR = 40
-    # WARNING = 30
-    # WARN = WARNING
-    # INFO = 20
-    # DEBUG = 10
-    # NOTSET = 0
-    level: str = "ERROR"
-
-    def get_level(self) -> int:
-        return logging.getLevelName(self.level.upper())
+# CRITICAL = 50
+# FATAL = CRITICAL
+# ERROR = 40
+# WARNING = 30
+# WARN = WARNING
+# INFO = 20
+# DEBUG = 10
+# NOTSET = 0
+LOG_LEVEL = "DEBUG"
 
 
 class RabbitMQSettings(BaseModel):
@@ -77,7 +72,7 @@ class Settings(BaseSettings):
     db_binance: DBBinanceConfig = DBBinanceConfig()
     binance: BinanceKeys = BinanceKeys()
     rabbitmq: RabbitMQSettings = RabbitMQSettings()
-    log_level: LogLevel = LogLevel()
+    log_level: str | int = LOG_LEVEL
 
     @classmethod
     def settings_customise_sources(
