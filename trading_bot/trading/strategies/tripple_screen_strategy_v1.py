@@ -1,4 +1,3 @@
-# v2
 from typing import List, Dict
 
 from binance.lib.utils import get_timestamp
