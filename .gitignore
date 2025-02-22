@@ -5,6 +5,7 @@
 main_old.py
 config.ini
 examples/
+trading_bot/trading/strategies/README.md
 
 .idea/
 **/.idea/

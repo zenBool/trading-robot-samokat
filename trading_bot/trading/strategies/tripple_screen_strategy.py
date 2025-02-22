@@ -30,15 +30,20 @@ class Strategy(AbstractSpotStrategy, BaseModel):
     symbols_track: List[Symbol] = Field(default_factory=list)
     symbols_ban: Dict[Symbol, int] = Field(default_factory=dict)
     name: str = "TrippleScreen"
+    strategyId: int = 2_000_000
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)  # config, data_controller, trader, **kwargs
         self._logger = logger
-        self.symbols_list = self._init_symbols(self.config.SYMBOLS_LIST)
+        self.symbols_list = Strategy._init_symbols(self.config.SYMBOLS_LIST)
         self.tfs = self.config.TIMEFRAMES_LIST
         self.basic_asset = self.config.BASE_COIN
 
     def symbols_filter(self):
+        """Отбираем символы, которые на долгом таймфрейме показывают рост
+        и записываем их в список для работы self.symbols_scout
+
+        """
         for symbol in self.symbols_list:
             self.data_ctrl.start(
                 (symbol.lower(), self.tfs.vlong),
@@ -48,6 +53,9 @@ class Strategy(AbstractSpotStrategy, BaseModel):
                 ),
             )
             alligator = self.data_ctrl.getIndicator((symbol.lower(), self.tfs.vlong))
+
+            # Если направление движения Аллигатора на "долгом" таймфрейме ВВЕРХ,
+            # то добавляем пару в работу в self.symbols_scout
             if alligator.direction().value >= 1:
                 self._logger.info(f"Working pair: ({symbol.name}, {self.tfs.vlong})")
                 self.symbols_scout.append(symbol)
@@ -59,6 +67,7 @@ class Strategy(AbstractSpotStrategy, BaseModel):
                 self.symbols_ban[symbol.lower()] = get_timestamp()
 
     def init_data_ctrl(self):
+        """Загрузка данных, расчет Alligator'ов и запусков потоков для всех символов, отобранных для работы"""
         self.symbols_filter()
 
         self._logger.info("List working pairs completed")
@@ -68,13 +77,15 @@ class Strategy(AbstractSpotStrategy, BaseModel):
         self.data_ctrl.init(self.symbols_scout, self.tfs, [Alligator])
 
     def scout(self):
+        """Главный алгоритм принятия решения на покупку актива
+        Перебирает все символы отобранные для работы
+
+        """
         recommend_buy = []
         recommend_sell = []
         for symbol in self.symbols_scout:
             long = self._long_direction(symbol.lower())
             short = self._short_direction(symbol.lower())
-            # states = self._get_states(symbol.lower())
-            # recom = self._recommend(states)
             if long + short == 2:
                 if self._volume(symbol.lower()):
                     self._logger.info(
@@ -83,7 +94,9 @@ class Strategy(AbstractSpotStrategy, BaseModel):
                     )
                     recommend_buy.append(symbol)
                 else:
-                    self._logger.info(f"ALLIGATORS BUY: {symbol} " f"but volumes dont match")
+                    self._logger.info(
+                        f"ALLIGATORS BUY: {symbol} " f"but volumes dont match"
+                    )
             elif long + short == -2:
                 if self._volume(symbol.lower()):
                     self._logger.info(
@@ -92,7 +105,9 @@ class Strategy(AbstractSpotStrategy, BaseModel):
                     )
                     recommend_sell.append(symbol)
                 else:
-                    self._logger.info(f"ALLIGATORS SELL: {symbol} " f"but volumes dont match")
+                    self._logger.info(
+                        f"ALLIGATORS SELL: {symbol} " f"but volumes dont match"
+                    )
             else:
                 pass
 
@@ -107,7 +122,8 @@ class Strategy(AbstractSpotStrategy, BaseModel):
     def _calculate_new_order_parameters(self):
         pass
 
-    def _init_symbols(self, symbols: List[str]) -> List[Symbol]:
+    @staticmethod
+    def _init_symbols(symbols: List[str]) -> List[Symbol]:
         return [Symbol(name=s) for s in symbols]
 
     def _get_states(self, symbol: str) -> AlligatorStatePool:

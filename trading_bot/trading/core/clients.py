@@ -19,11 +19,14 @@ class Client(Spot):
         self, api_key: str = "", api_secret: str = "", test_mode: bool = False, **kwargs
     ):
         if test_mode:
+            # тестовый режим
             kwargs["base_url"] = "https://testnet.binance.vision"
         elif api_key and api_secret:
+            # боевой режим
             kwargs["base_url"] = self._server_choice()
         else:
-            kwargs["base_url"] = 'https://data-api.binance.vision'
+            # только данные, ключи не используются
+            kwargs["base_url"] = "https://data-api.binance.vision"
 
         super().__init__(api_key, api_secret, **kwargs)
 
@@ -121,7 +124,11 @@ def ws_on_error(_, messsage):
 
 class WSAPIClient(SpotWebsocketAPIClient):
     def __init__(
-        self, api_key: str = "", api_secret: str = "", test_mode: bool = False, **kwargs,
+        self,
+        api_key: str = "",
+        api_secret: str = "",
+        test_mode: bool = False,
+        **kwargs,
     ):
         if test_mode:
             # The base endpoint for testnet Web Socket API

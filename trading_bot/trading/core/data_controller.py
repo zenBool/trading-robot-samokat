@@ -38,6 +38,10 @@ class DataController(BaseModel):
         self._logger = logger
 
     def init(self, symbols: List[Symbol], timeframes, indicators):
+        """Добавляет в хранилище, запускает потоки с биржи и расчитывает Alligator
+        для всех отфильтрованных пар на всех рабочих таймфреймах
+
+        """
         self.symbols = symbols
         self.timeframes = timeframes
         self.indicators = indicators
@@ -61,10 +65,19 @@ class DataController(BaseModel):
                     self.start(name, alligator)
 
     def start(self, name: Tuple[str, str], indicator: Indicator):
+        """Добавляет в хранилище отслеживаемый таймфрейм с именем (symbol, tf)
+        и запускает поток для получения данных с биржи
+
+        """
         self.storage.add(name, indicator)
         self._load_data(name)
 
     def stop(self, name: Tuple[str, str] | None = None):
+        """Отписывается от получения данных с биржи потока с именем (symbol, tf)
+        и удаляет данные (symbol, tf) из хранилища.
+        Если имя не указано то останавливает все потоки и закрывает вебсокет.
+
+        """
         if not name:
             self._logger.info("DataManager: Stop all streams")
             self._logger.debug(f"{threading.current_thread().name} stopped")
@@ -79,15 +92,12 @@ class DataController(BaseModel):
             except Exception as e:
                 self._logger.error(f"DataManager: Don't stop stream {name}\n{e}")
 
-    # def update(self, name: Tuple[str, str], data: pd.DataFrame):
-    #     self.storage.update(name, data)
-
     def get(self, name: Tuple[str, str]) -> Tuple[SymbolKline, Indicator] | None:
+        """Достает из Хранилища данные по имени (symbol, tf) и отдает кортеж (SymbolKline, Alligator)"""
         return self.storage.get(name)
 
     def getSymbolKline(self, name: Tuple[str, str]) -> SymbolKline | None:
-        """
-        Retrieves symbol kline for the given name and returns it, or returns None if it does not exist.
+        """Retrieves symbol kline for the given name and returns it, or returns None if it does not exist.
         Parameters:
             name (Tuple[str, str]): The name of the symbol.
         Returns:
@@ -96,10 +106,12 @@ class DataController(BaseModel):
         return self.storage.get_kline(name)
 
     def getIndicator(self, name: Tuple[str, str]) -> Indicator | None:
+        """Достает из хранилища и отдает отдельный Alligator с именем (symbol, tf)"""
         return self.storage.get_indicator(name)
 
     @property
     def streams_list(self) -> List[Tuple[str, str]]:
+        """Возвращает сортированный список имен активных потоков"""
         return sorted(self.storage.list_klines)
 
     def _handler(self, socketManager, message):

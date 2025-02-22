@@ -3,7 +3,7 @@ from typing import Any
 from binance.error import ClientError, ServerError
 
 from common.logger import logger
-from core.schemas.account import AccountSchema
+from core.schemas.account import Account as AccountSchema
 from trading.core.account import Account
 
 from trading.core.clients import Client, WSAPIClient, WSStreamClient
@@ -67,12 +67,16 @@ class Trader:
 
         self._get_account()
 
-    def buy_limit(self, symbol: str, price: float, quantity: float = 0,  quoteOrderQty: float = 0):
+    def buy_limit(
+        self, symbol: str, price: float, quantity: float = 0, quoteOrderQty: float = 0
+    ):
         side = "BUY"
 
         return self._new_limit_order(symbol, side, price, quantity, quoteOrderQty)
 
-    def sell_limit(self, symbol: str, price: float, quantity: float = 0,  quoteOrderQty: float = 0):
+    def sell_limit(
+        self, symbol: str, price: float, quantity: float = 0, quoteOrderQty: float = 0
+    ):
         side = "SELL"
 
         return self._new_limit_order(symbol, side, price, quantity, quoteOrderQty)
@@ -87,9 +91,9 @@ class Trader:
         try:
             response = self._new_market_order(symbol, side, quantity, quoteOrderQty)
         except ClientError as error:
-            logger.error(error)
+            self._logger.error(error)
         except ServerError as error:
-            logger.error(error)
+            self._logger.error(error)
 
         return
 
@@ -124,7 +128,7 @@ class Trader:
         self.strategyType = 1000000
 
     def _get_account(self):
-        account_data = self.client.account(recvWindow=5000, omitZeroBalances='true')
+        account_data = self.client.account(recvWindow=5000, omitZeroBalances="true")
         self.account = Account(**account_data)
 
     def _get_all_open_orders(self):
@@ -139,7 +143,14 @@ class Trader:
 
         return []
 
-    def _new_limit_order(self, symbol: str, side: str, price: float, quantity: float = 0, quoteOrderQty: float = 0):
+    def _new_limit_order(
+        self,
+        symbol: str,
+        side: str,
+        price: float,
+        quantity: float = 0,
+        quoteOrderQty: float = 0,
+    ):
         if quantity == quoteOrderQty == 0:
             return -1
 
@@ -158,7 +169,9 @@ class Trader:
 
         return self._new_order(**params)
 
-    def _new_market_order(self, symbol: str, side: str, quantity: float = 0, quoteOrderQty: float = 0):
+    def _new_market_order(
+        self, symbol: str, side: str, quantity: float = 0, quoteOrderQty: float = 0
+    ):
         params = {
             "symbol": symbol.upper(),
             "side": side,
@@ -189,7 +202,7 @@ class Trader:
             return -1, error.error_code, error.error_message
         except ServerError as error:
             self._logger.error("Server error: " + error.status_code + error.message)
-            return -1, error.status_code,  error.message
+            return -1, error.status_code, error.message
 
         self._logger.debug("raw response:" + response)
         return response
